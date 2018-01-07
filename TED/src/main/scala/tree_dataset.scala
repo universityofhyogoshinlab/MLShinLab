@@ -2,10 +2,6 @@ import scala.io.Source
 import scala.collection.mutable.{ArrayBuffer, Map, Set}
 import scala.util.matching.Regex
 
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-
 import com.Ostermiller.util.MD5
 
 case class MyHash() {
@@ -60,7 +56,7 @@ class TreeDataset(file_name: String, weight: Double) {
   var ln = 1
   val f = Source.fromFile(file_name)
   val trees: Array[Array[TreeNode]] =
-    for (line <- f.getLines.toArray; val labelP(label, tree) = line) yield {
+    for (line <- f.getLines.toArray; labelP(label, tree) = line) yield {
       val pack = TreeParser.parse(line)
       if(pack.size == 0) {
         println("Some error in line " + ln)
@@ -74,8 +70,7 @@ class TreeDataset(file_name: String, weight: Double) {
   val tn = trees.size
 
   val pairs =
-    {for(i <- 0 to tn-2; j <- i+1 until tn) yield {
-      ((i, trees(i)), (j, trees(j)))}}.toArray
+    { for(i <- 0 to tn-2; j <- i+1 until tn) yield { ((i, trees(i)), (j, trees(j))) } }.toArray
 
   def pack(array: Array[((Int, Array[TreeNode]), (Int, Array[TreeNode]))],
     n: Int):
@@ -94,9 +89,7 @@ class TreeDataset(file_name: String, weight: Double) {
   def computeDM(shape: String, gap: Boolean, float: Boolean, exact: Boolean,
     jobSize: Int): collection.immutable.Map[(Int, Int), Double] = {
 
-    val sc = new SparkContext("local[*]", "tree_distance")
-
-    
+/*
     val list = pack(pairs, jobSize)
 
     val ted = new TED()
@@ -106,22 +99,16 @@ class TreeDataset(file_name: String, weight: Double) {
         (x._1, y._1) ->
         ted.eval(x._2(0), y._2(0), shape, gap, float, exact, weight)}
     }
+*/
+    val ted = new TED()
 
-//    val ted = new TED(shape, gap, float, exact)
-    
-//    val list = sc.parallelize(pack(pairs, jobSize))
+    val list = pack(pairs, jobSize).par
 
-    // val matrix = list.flatMap{pairList =>
-    //   val ted = new TED()
-    //   pairList.map{case (x, y) => 
-    //     (x._1, y._1) ->
-    //     ted.eval(x._2(0), y._2(0), shape, gap, float, exact, weight)}
-    // }.cache().collect()
-
-    //   pairList.map{case (x, y) => (x._1, y._1) -> ted.eval(x._2(0), y._2(0))}
-    // }.cache().collect()
-    
-    sc.stop()
+    val matrix = list.flatMap{pairList =>
+      val ted = new TED()
+      pairList.map{case (x, y) => 
+        (x._1, y._1) ->
+        ted.eval(x._2(0), y._2(0), shape, gap, float, exact, weight)}}.seq
 
     matrix.toMap
   }
