@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage{amssymb}
+
+\title{How to use \texttt{DMTesterHAC.jar}}
+\date{\today}
+\author{Kilho Shin}
+
+\newcommand\dm{\texttt{.dm}}
+
+\begin{document}
+\maketitle
+\paragraph{Overview.}
+Given \dm\ files, 
+this program performs
+the hierarchical agglomerative clustering (HAC) algorithm
+and compares the distance metrics
+with respect to the Adjusted Rand Index (ARI) and
+the Normalized Mutual Information (NMI). 
+
+\paragraph{Previous program.}
+
+A program that computes distance matrices of trees and
+outputs the computed matrices as \dm\ files,
+for example, \texttt{TED.jar}.
+
+\paragraph{Next program.}
+
+\texttt{ResultAnalyzer.jar},
+which statistically compare the distance metrics
+by Wilcoxon Signed Rank Test, Friedman Test, Hommel Test,
+Shaffer Test and Benjamini Hachberg Test.
+
+\paragraph{Usage.}
+\begin{quotation}\tt
+  java -jar DMTesterHAC.jar -c config.txt -w out.result
+\end{quotation}
+
+\begin{description}
+\item[\tt -c.] (Mandatory) 
+  This option specifies a configuration file to use for comparison.
+\item[\tt -w:] (Mndatory)
+  This option specifies a \texttt{.result} file into which
+  the results of comparison will be written.
+\end{description} 
+\paragraph{Configuration files.}
+A configuration looks as follows.
+\begin{quotation}\tt
+  \noindent
+  FILES\% colon-cancer.tree-fttf-0.10.dm\\
+  colon-cancer.tree-fttf-0.50.dm colon-cancer.tree-fttf-1.00.dm colon-cancer.tree-fttf-2.00.dm colon-cancer.tree-fttt-1.00.dm\\
+  K\_MAX\% 20\\
+  LINK\% complete
+\end{quotation}
+
+\begin{description}
+\item[\tt FILES:] (Mandatory)
+  This specifies one or more \dm\ files to be compared.
+  The \dm\ files should be outputs of
+  a program that computes distance matrices of trees, 
+  for example, the \texttt{TED.jar} program.
+\item[\tt K\_MAX:] (Optional)
+  If a value $n$ is specified,
+  the specified distance metrics are compared
+  with respect to the cluster number $k$ with $k = 2, \dots, n$.
+  If left out, the value of two will be used.
+\item[\tt LINK:] (Optional)
+  A linkage to be used when the program runs HAC
+  is specified.
+  The value should be one of
+  \texttt{single}, \texttt{complete}, \texttt{upgma}, \texttt{upgmc}, 
+  \texttt{wpgma}, \texttt{wpgmc} and \texttt{wand}.
+  If left out or a value other than the above is specified,
+  the value \texttt{complete} will be used.
+\end{description}
+
+\paragraph{Output.}
+An output file follows the \texttt{.result} format and as a result
+can be processed by the \texttt{ResultAnalyzer.jar} program.
+
+Also, the output includes the following at bottom.
+\begin{itemize}
+\item
+  \LaTeX\ codes to describe the results of comparison as tables.
+\item
+  Python codes to draw graphs of the results of comparison.
+\end{itemize}
+\end{document}

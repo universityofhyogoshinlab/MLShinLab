@@ -1,0 +1,3 @@
+FILES% colon-cancer.tree-fttf-0.10.dm colon-cancer.tree-fttf-0.50.dm colon-cancer.tree-fttf-1.00.dm colon-cancer.tree-fttf-2.00.dm colon-cancer.tree-fttt-1.00.dm
+K_MAX% 20
+LINK% complete
