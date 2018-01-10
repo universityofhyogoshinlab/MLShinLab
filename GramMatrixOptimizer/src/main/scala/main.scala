@@ -120,6 +120,8 @@ object Main {
       }
     }
   }
+
+
   
   def main(args: Array[String]) {
 
@@ -139,6 +141,14 @@ object Main {
     val test = (for(a <- 1 to range_a._3;
       b <- 0 to range_b._3 if div(range_a, a) >= div(range_b, b);
       c <- 0 to range_c._3) yield (div(range_a, a), div(range_b, b), div(range_c, c))).toArray.distinct
+
+    svm.svm_set_print_string_function(new libsvm.svm_print_interface() {
+      override def print(s: String) {
+        if (s != ".")
+          System.out.print(s);
+          System.out.flush();
+      }
+    })
 
     val scores: Array[((Double, Double, Double), Int, Int, Int, Int)] =
       sc.parallelize(test).map{case (a:Double, b:Double, c:Double) =>
