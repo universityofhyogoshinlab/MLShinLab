@@ -16,9 +16,12 @@ import java.util.Date
 
 import scopt.OptionParser
 
+
 case class MainOption(
   configFileName: String = "",
-  resultFileName: String = "")
+  resultFileName: String = ""
+)
+
 
 object Main {
 
@@ -62,10 +65,12 @@ object Main {
 
     val parser = new OptionParser[MainOption]("Distance-based analysis.") {
       opt[String]('c', "config") required() valueName("<path>") action {
-	(x, o) => o.copy(configFileName = x) } text("Read experiment configuration from this file. Required.")
+        (x, o) => o.copy(configFileName = x)
+      } text("Read experiment configuration from this file. Required.")
 
-      opt[String]('w', "write") valueName("<path>") action { (x, o) =>
-        o.copy(resultFileName = x) } text("Write results of analysis to this file.")
+      opt[String]('w', "write") valueName("<path>") action {
+        (x, o) => o.copy(resultFileName = x)
+      } text("Write results of analysis to this file.")
     }
 
     parser.parse(args, MainOption()) map { option =>
@@ -74,32 +79,29 @@ object Main {
       resultFileName = option.resultFileName
     } getOrElse {
       // 引数解析に失敗した場合
-      // sys.exit(1)
       println(parser.usage)
       return
     }
-    
+
     if(configFileName == "") {
       println("No configuration file specified.")
       println("Abort the process.")
       println(parser.usage)
       return
     }
-    
+
     readConfigFile
 
     if(fileList.length == 0) {
       println("No file is specified.\n The process aborted.")
       return
     }
-    
     println("Read from " + fileList.mkString(","))
 
     if(resultFileName == "") {
       println("No output file name specified.")
       resultFileName = ("%tF-%<tH:%<tM:%<tS" format new Date) + ".result"
     }
-
     println("The resulsts will be output to " + resultFileName +".")
 
     lazy val out = new OutputStreamWriter(new FileOutputStream(resultFileName), "utf-8")
@@ -121,22 +123,20 @@ object Main {
     }
 
     println("Targets are: " + targetList.
-      map(x => x._2 + " (" + x._1 + ")").mkString(","))
+      map(x => x._2 + " (" + x._1 + ")").mkString(",")
+    )
 
-    
     printlnBoth("%DATASET = " + dataset + "%")
 
     for(f_name <- fileList) {
-
       printlnBoth("%TARGET = " + targetList(f_name) + "%")
-      
-      val clusterTree = hclust(readData(f_name), link)
 
+      val clusterTree = hclust(readData(f_name), link)
       val ariArray = ArrayBuffer[Double]()
       val nmiArray = ArrayBuffer[Double]()
 
       for(k <- 2 to k_max) {
-      	printlnBoth("k = " + k + "***")
+        printlnBoth("k = " + k + "***")
         val clusters = clusterTree.partition(k)
         printlnBoth("Clustering = " + clusters.mkString(","))
 
@@ -159,24 +159,6 @@ object Main {
       ariForPy ++= ariArray
       nmiForPy ++= nmiArray
     }
-
-    // printlnBoth("\n*****************")
-    // printlnBoth("R Program ")
-    // printlnBoth("*****************")
-    // printlnBoth("\n---- Cut here ----\n")
-    // printlnBoth("df = data.frame(")
-    // printlnBoth("precision = c(" + prcForR.mkString(",") + "),")
-    // printlnBoth("recall = c(" + fscForR.mkString(",") + "),")
-    // printlnBoth("fscore = c(" + fscForR.mkString(",") + "),")
-    // printlnBoth("k = c(" + List.fill(fileList.size)((1 to k_max).mkString(",")).mkString(",") + "),")
-    // printBoth("metric = c(")
-    // printlnBoth(fileList.map(x => List.fill(k_max)("\""+targetList(x)+"\"").mkString(",")).mkString(",") + ")")
-    // printlnBoth(")")
-    
-    // printlnBoth("gfsc <- ggplot(df, aes(x=k, y=fscore, colour=metric, shape=metric, linetype=metric, group=metric))+geom_smooth(se=FALSE,size=0.5)+geom_point()")
-    // printBoth("gfsc <- gfsc + scale_x_continuous(breaks=seq(0,")
-    // printlnBoth(k_max + ",by=1),limits=c(0," + k_max + "))")
-    // printlnBoth("ggsave(file = \"kNN-" + dataset + ".pdf\", plot = gfsc)")
 
     printlnBoth("\n*****************")
     printlnBoth("TeX Program ")
@@ -269,13 +251,13 @@ object Main {
       val fileP = """FILES%\s*(.*)""".r
       val kP = """K_MAX%\s*(\d+).*""".r
       val lP = """LINK%\s*([a-zA-Z]+).*""".r
-      
+
       for(l <- Source.fromFile(configFileName).getLines) {
-	l.toUpperCase match {
-	  case fileP(x) =>
-	    fileList ++= x.split("""[,\s]""")
-	  case kP(x) =>
-	    k_max = x.toInt
+        l.toUpperCase match {
+          case fileP(x) =>
+            fileList ++= x.split("""[,\s]""")
+          case kP(x) =>
+            k_max = x.toInt
           case lP(x) =>
             link = x.toUpperCase match {
               case "SINGLE" => "single"
@@ -287,15 +269,14 @@ object Main {
               case _ => "complete"
             }
             println("### DEBUG ###" + link)
-	  case _ => // Just ignore.
-	}
+          case _ => // Just ignore.
+        }
       }
     }
 
     def extractInfo(file_name: String): Boolean = {
       val datasetP = """\*\*\* DATASET\s+(.*)""".r
       val lineP = """(\d+):(.+)""".r
-//      val distanceP = """\*\*\* DISTANCES""".r
 
       val temp = ArrayBuffer[(Int, String)]()
 
@@ -303,16 +284,16 @@ object Main {
         l => !l.startsWith("*** DISTANCES"))
       for(line <- lines) {
         line match {
-	  case datasetP(x) =>
-	    dataset = x
+          case datasetP(x) =>
+            dataset = x
           case lineP(idSymb, label) =>
-            val id = idSymb.toInt
-            temp += Pair(id, label)
-            if(!instances.isDefinedAt(label)) {
-              instances(label) = ArrayBuffer[Int]()
-              classes += label
-            }
-            instances(label) += id
+              val id = idSymb.toInt
+              temp += Pair(id, label)
+              if(!instances.isDefinedAt(label)) {
+                instances(label) = ArrayBuffer[Int]()
+                classes += label
+              }
+              instances(label) += id
           case _ => //Do nothing.
         }
       }
@@ -336,24 +317,22 @@ object Main {
       val distanceP = """\*\*\* DISTANCES:\s*(.*)""".r
 
       for(fn <- fileList) {
-
         println("Checking " + fn + ".")
 
         var foundDataset = false
         var foundTarget = false
-        
         var li = Source.fromFile(fn).getLines
 
         while(li.hasNext && !(foundDataset && foundTarget)) {
           val line = li.next
-	  line match {
-	    case datasetP(x) =>
-	      if(dataset != x) {
-	        println("ERROR: Inconsistent dataset name in " + fn)
-	        return false
-	      }
+          line match {
+            case datasetP(x) =>
+              if(dataset != x) {
+                println("ERROR: Inconsistent dataset name in " + fn)
+                return false
+              }
               foundDataset = true
-	    case distanceP(x) =>
+            case distanceP(x) =>
               val m = x.split("""\s+""").map{x =>
                 val y = x.split("=")
                 (y(0), y(1))}.toMap
@@ -364,18 +343,18 @@ object Main {
                 println("ERROR: Duplicated target in " + fn)
                 return false
               }
-	      targetList += fn -> target
+              targetList += fn -> target
               foundTarget = true
-	    case _ => // Just ignore.
-	  }
+            case _ => // Just ignore.
+          }
         }
         if(!foundDataset) {
-	  println("ERROR: No dataset specified in " + fn)
-	  return false
+          println("ERROR: No dataset specified in " + fn)
+          return false
         }
         if(!foundTarget) {
-	  println("ERROR: No target specified in " + fn)
-	  return false
+          println("ERROR: No target specified in " + fn)
+          return false
         }
       }
       return true
@@ -400,14 +379,12 @@ object Main {
     }
 
     // 標準出力と出力ファイルに同時に出力（改行あり）
-    
     def printlnBoth(s: String) {
       println(s)
       out.write(s + "\n")
     }
 
     // 標準出力と出力ファイルに同時に出力（改行なし）
-
     def printBoth(s: String) {
       print(s)
       out.write(s)
@@ -430,14 +407,5 @@ object Main {
       val h = entropy(x.zip(cls).map{case (y: Int, z: Int) => y*classN+z})
       2 - 2 * h / (classH + entropy(x))
     }
-
-    // // 距離の表示
-    // def displayDistances {
-    //   val sorted = instances.foldLeft(Array[Int]()){(x,y) => x ++ y._2}.sorted
-    //   println("%%%" + sorted.mkString(" "))
-    //   for(i <- sorted) {
-    //     println(i + " " + sorted.map(x => d(x, i).toInt).mkString(" "))
-    //   }
-    // }
   }
 }
